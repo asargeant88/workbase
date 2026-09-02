@@ -138,7 +138,9 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                         )}
                         
                         {item.type === "report_view" && (
-                          <p className="text-sm text-[#ccff00] italic ml-11">Report viewed via shared link</p>
+                          <p className="text-sm text-[#ccff00] italic ml-11">
+                            Report viewed via shared link at {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
                         )}
                       </div>
                     ))}
