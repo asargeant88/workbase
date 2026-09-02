@@ -22,6 +22,18 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
 
   if (!job) notFound()
 
+  const groupedTimeline = job.timeline.reduce((acc, item) => {
+    const dateStr = item.createdAt.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    const lastGroup = acc[acc.length - 1]
+    
+    if (lastGroup && lastGroup.date === dateStr) {
+      lastGroup.items.push(item)
+    } else {
+      acc.push({ date: dateStr, items: [item] })
+    }
+    return acc
+  }, [] as Array<{ date: string, items: typeof job.timeline }>)
+
   return (
     <div className="flex flex-col h-full bg-[#222222]">
       {/* Detail View Header */}
@@ -93,36 +105,47 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <p className="text-gray-400 text-sm mb-6">Start by sending a message or taking a photo!</p>
             </div>
           ) : (
-            job.timeline.map((item) => (
-              <div key={item.id} className="bg-[#1a1a1a] p-5 rounded-xl border border-[#333]">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center text-white text-xs font-bold">
-                    {(item.user?.name || "SYS").substring(0,2).toUpperCase()}
+            <div className="space-y-10 pb-4">
+              {groupedTimeline.map((group) => (
+                <div key={group.date} className="relative">
+                  <div className="sticky top-0 z-10 py-3 bg-[#222222]/95 backdrop-blur-sm -mx-6 px-6 mb-4 border-y border-[#333]">
+                    <h3 className="text-xs font-bold text-[#ccff00] tracking-widest uppercase">{group.date}</h3>
                   </div>
-                  <div>
-                    <div className="font-semibold text-sm text-gray-200">{item.user?.name || item.user?.email || "System"}</div>
-                    <div className="text-xs text-gray-500">
-                      {item.createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} at {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                  <div className="space-y-4">
+                    {group.items.map((item) => (
+                      <div key={item.id} className="bg-[#1a1a1a] p-5 rounded-xl border border-[#333]">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-[#333] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {(item.user?.name || "SYS").substring(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-sm text-gray-200">{item.user?.name || item.user?.email || "System"}</div>
+                            <div className="text-xs text-gray-500">
+                              {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {item.type === "message" && (
+                          <p className="text-gray-300 ml-11">{item.content}</p>
+                        )}
+                        
+                        {item.type === "photo" && (
+                          <div className="relative h-64 w-full md:w-2/3 rounded-lg overflow-hidden mt-2 ml-11 border border-[#333]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.content || ""} alt="Job Photo" className="object-cover w-full h-full" />
+                          </div>
+                        )}
+                        
+                        {item.type === "report_view" && (
+                          <p className="text-sm text-[#ccff00] italic ml-11">Report viewed via shared link</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-                
-                {item.type === "message" && (
-                  <p className="text-gray-300 ml-11">{item.content}</p>
-                )}
-                
-                {item.type === "photo" && (
-                  <div className="relative h-64 w-full md:w-2/3 rounded-lg overflow-hidden mt-2 ml-11 border border-[#333]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.content} alt="Job Photo" className="object-cover w-full h-full" />
-                  </div>
-                )}
-                
-                {item.type === "report_view" && (
-                  <p className="text-sm text-[#ccff00] italic ml-11">Report viewed via shared link</p>
-                )}
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </main>
