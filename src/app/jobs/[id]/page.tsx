@@ -101,7 +101,9 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                   </div>
                   <div>
                     <div className="font-semibold text-sm text-gray-200">{item.user?.name || item.user?.email || "System"}</div>
-                    <div className="text-xs text-gray-500">{item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    <div className="text-xs text-gray-500">
+                      {item.createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} at {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                   </div>
                 </div>
                 
