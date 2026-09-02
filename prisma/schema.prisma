@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  planType  String   @default("free") // "free" or "paid"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members   WorkspaceMember[]
+  jobs      Job[]
+  companies Company[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  workspaces WorkspaceMember[]
+  timelineItems TimelineItem[]
+}
+
+model WorkspaceMember {
+  id              String   @id @default(uuid())
+  workspaceId     String
+  userId          String
+  role            String   @default("member") // "owner" or "member"
+  canShareReports Boolean  @default(false)
+  
+  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  workspaceId String
+  companyId   String?  // Optional relation to Company
+  name        String
+  address     String?
+  priority    String   @default("medium") // low, medium, high
+  jobDate     DateTime? 
+  isTrashed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt // Automatically ordered by most recent activity
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  company     Company?  @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  timeline    TimelineItem[]
+  links       SharedLink[]
+}
+
+model Company {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  address     String?
+  phone       String?
+  email       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  jobs        Job[]
+}
+
+model TimelineItem {
+  id        String   @id @default(uuid())
+  jobId     String
+  userId    String?  // Can be null if it's a system event (e.g. report viewed)
+  type      String   // "photo", "message", "report_view"
+  content   String   // Text content or image URL
+  createdAt DateTime @default(now())
+
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model SharedLink {
+  id        String   @id @default(uuid())
+  jobId     String
+  token     String   @unique @default(uuid())
+  createdAt DateTime @default(now())
+
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
