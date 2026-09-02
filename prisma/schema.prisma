@@ -81,7 +81,8 @@ model TimelineItem {
   jobId     String
   userId    String?  // Can be null if it's a system event (e.g. report viewed)
   type      String   // "photo", "message", "report_view"
-  content   String   // Text content or image URL
+  content   String?  // Text content or single image URL
+  photos    String[] @default([]) // Array of base64 photo URLs for multiple photos
   createdAt DateTime @default(now())
 
   job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)

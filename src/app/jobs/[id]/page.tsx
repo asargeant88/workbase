@@ -131,9 +131,20 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                         )}
                         
                         {item.type === "photo" && (
-                          <div className="relative h-64 w-full md:w-2/3 rounded-lg overflow-hidden mt-2 ml-11 border border-[#333]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={item.content || ""} alt="Job Photo" className="object-cover w-full h-full" />
+                          <div className="mt-2 ml-11 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {item.photos.length > 0 ? (
+                              item.photos.map((photoUrl, idx) => (
+                                <div key={idx} className="relative h-64 w-full rounded-lg overflow-hidden border border-[#333]">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={photoUrl} alt={`Job Photo ${idx + 1}`} className="object-cover w-full h-full" />
+                                </div>
+                              ))
+                            ) : item.content ? (
+                              <div className="relative h-64 w-full rounded-lg overflow-hidden border border-[#333]">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={item.content} alt="Job Photo" className="object-cover w-full h-full" />
+                              </div>
+                            ) : null}
                           </div>
                         )}
                         

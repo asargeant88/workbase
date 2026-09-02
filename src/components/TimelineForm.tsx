@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { addMessage, addPhoto } from "@/app/actions/timeline"
+import { addMessage, addPhotos } from "@/app/actions/timeline"
 
 export function TimelineForm({ jobId }: { jobId: string }) {
   const [message, setMessage] = useState("")
@@ -18,18 +18,25 @@ export function TimelineForm({ jobId }: { jobId: string }) {
   }
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files ? Array.from(e.target.files) : []
+    if (files.length === 0) return
 
     setLoading(true)
-    const reader = new FileReader()
-    reader.onload = async (event) => {
-      const base64 = event.target?.result as string
-      await addPhoto(jobId, base64)
-      setLoading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
-    }
-    reader.readAsDataURL(file)
+    
+    // Convert all files to base64
+    const promises = files.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = (event) => resolve(event.target?.result as string)
+        reader.readAsDataURL(file)
+      })
+    })
+
+    const base64Images = await Promise.all(promises)
+    await addPhotos(jobId, base64Images)
+    
+    setLoading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   return (
@@ -66,6 +73,7 @@ export function TimelineForm({ jobId }: { jobId: string }) {
       <input 
         type="file" 
         accept="image/*" 
+        multiple
         capture="environment"
         ref={fileInputRef} 
         onChange={handlePhotoChange} 

@@ -26,18 +26,17 @@ export async function addMessage(jobId: string, content: string) {
   revalidatePath(`/jobs/${jobId}`)
 }
 
-export async function addPhoto(jobId: string, base64Image: string) {
+export async function addPhotos(jobId: string, base64Images: string[]) {
   const session = await auth()
   if (!session?.user?.id) throw new Error("Not authorized")
 
-  // For this demo, we'll store the base64 image directly in the DB (or could save to disk).
-  // In a real app with large photos, upload to S3/Cloud Storage and save URL here.
+  // Store all base64 images directly in the DB under the new photos array
   await prisma.timelineItem.create({
     data: {
       jobId,
       userId: session.user.id,
       type: "photo",
-      content: base64Image,
+      photos: base64Images,
     }
   })
 
